@@ -100,20 +100,20 @@ const App: React.FC = () => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
+      if (PUBLIC_AGENT_ID) {
+        await conversation.startSession({ agentId: PUBLIC_AGENT_ID, connectionType: 'webrtc' });
+        return;
+      }
+
       const signedUrl = await getSignedUrl();
       if (signedUrl) {
         await conversation.startSession({ signedUrl, connectionType: 'websocket' });
         return;
       }
 
-      if (PUBLIC_AGENT_ID) {
-        await conversation.startSession({ agentId: PUBLIC_AGENT_ID, connectionType: 'webrtc' });
-        return;
-      }
-
       pushFeed(
         'error',
-        'No session auth available. Configure backend ELEVENLABS_API_KEY + ELEVENLABS_AGENT_ID, or set VITE_ELEVENLABS_AGENT_ID for a public agent.'
+        'No session auth available. Set VITE_ELEVENLABS_AGENT_ID for public agent mode, or use an ElevenLabs API key with convai_write for signed sessions.'
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not start voice session.';

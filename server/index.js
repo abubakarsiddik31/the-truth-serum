@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -9,10 +10,10 @@ const port = process.env.PORT || 3001;
 const elevenLabsAgentId = process.env.ELEVENLABS_AGENT_ID;
 const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY;
 
-// Initialize Firecrawl
-const firecrawl = new FirecrawlApp({
-  apiKey: process.env.FIRECRAWL_API_KEY
-});
+// Initialize Firecrawl only when API key exists (prevents startup crash).
+const firecrawl = process.env.FIRECRAWL_API_KEY
+  ? new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY })
+  : null;
 
 app.use(cors());
 app.use(express.json());
@@ -35,12 +36,89 @@ const SKEPTIC_KEYWORDS = [
 ];
 
 function getTopicFromBody(body = {}) {
-  const rawTopic = body.topic || body.query || body.product || body.trend;
-  if (typeof rawTopic !== 'string') {
-    return '';
-  }
+  const candidateKeys = ['topic', 'query', 'product', 'trend'];
+  const wrapperKeys = ['parameters', 'body', 'payload', 'request_body', 'data', 'input', 'args'];
 
-  return rawTopic.trim();
+  const findTopic = (value, depth = 0) => {
+    if (depth > 6 || value == null) {
+      return '';
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return '';
+      }
+      // Nested strings are treated as direct values.
+      if (depth > 0) {
+        return trimmed;
+      }
+      // Top-level raw JSON string body fallback.
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          return findTopic(JSON.parse(trimmed), depth + 1);
+        } catch {
+          return '';
+        }
+      }
+      return '';
+    }
+
+    if (Array.isArray(value)) {
+      // Handle array-style tool parameter payloads.
+      for (const item of value) {
+        if (!item || typeof item !== 'object') {
+          continue;
+        }
+        const keyName = [item.name, item.id, item.key, item.field]
+          .find((v) => typeof v === 'string');
+        const valCandidate = [item.value, item.constant_value, item.text]
+          .find((v) => typeof v === 'string' && v.trim());
+        if (typeof keyName === 'string' && candidateKeys.includes(keyName) && typeof valCandidate === 'string') {
+          return valCandidate.trim();
+        }
+      }
+
+      for (const item of value) {
+        const found = findTopic(item, depth + 1);
+        if (found) {
+          return found;
+        }
+      }
+
+      return '';
+    }
+
+    if (typeof value !== 'object') {
+      return '';
+    }
+
+    for (const key of candidateKeys) {
+      const field = value[key];
+      if (typeof field === 'string' && field.trim()) {
+        return field.trim();
+      }
+    }
+
+    for (const key of wrapperKeys) {
+      const nested = value[key];
+      const found = findTopic(nested, depth + 1);
+      if (found) {
+        return found;
+      }
+    }
+
+    for (const nestedValue of Object.values(value)) {
+      const found = findTopic(nestedValue, depth + 1);
+      if (found) {
+        return found;
+      }
+    }
+
+    return '';
+  };
+
+  return findTopic(body);
 }
 
 function scoreLine(line) {
@@ -126,14 +204,22 @@ app.post('/api/search', async (req, res) => {
   const topic = getTopicFromBody(req.body);
 
   if (!topic) {
-    return res.status(400).json({
-      error: 'Missing topic in request body.',
-      hint: 'Send one of: topic, query, product, trend'
+    console.warn('[Truth Serum] Missing topic in payload:', JSON.stringify(req.body || {}).slice(0, 1000));
+    const fallback = 'I could not find a topic in the tool payload. Please retry and include a topic like "Cybertruck".';
+    return res.json({
+      topic: '',
+      findings: [],
+      threads: [],
+      summary: fallback,
+      result: fallback
     });
   }
 
   if (!process.env.FIRECRAWL_API_KEY) {
     return res.status(500).json({ error: 'FIRECRAWL_API_KEY is not configured.' });
+  }
+  if (!firecrawl) {
+    return res.status(500).json({ error: 'Firecrawl client is not initialized.' });
   }
 
   console.log(`[Truth Serum] Scouring the depths for: ${topic}...`);
@@ -152,12 +238,14 @@ app.post('/api/search', async (req, res) => {
     );
 
     if (!searchResponse.success || !searchResponse.data || searchResponse.data.length === 0) {
+      const summary =
+        "I couldn't find any real talk on this. Either it's too obscure or everyone's already been silenced by the marketing department.";
       return res.json({
         topic,
         findings: [],
         threads: [],
-        summary:
-          "I couldn't find any real talk on this. Either it's too obscure or everyone's already been silenced by the marketing department."
+        summary,
+        result: summary
       });
     }
 
@@ -204,12 +292,20 @@ app.post('/api/search', async (req, res) => {
       topic,
       findings: topFindings,
       threads,
-      summary
+      summary,
+      result: summary
     });
   } catch (error) {
     const message = error.response?.data || error.message;
     console.error('[Error] Firecrawl Search failed:', message);
-    return res.status(500).json({ error: 'The Truth Serum is temporarily clogged. Try again later.' });
+    const fallback = 'The Truth Serum is temporarily clogged. I could not retrieve live Reddit/forum evidence this turn.';
+    return res.json({
+      topic,
+      findings: [],
+      threads: [],
+      summary: fallback,
+      result: fallback
+    });
   }
 });
 
