@@ -19,6 +19,24 @@ Speak to it. Ask about any product, brand, or trend. Get the real deal.
 
 ---
 
+## Demo & Screenshots
+
+### Demo Video
+
+- [Watch the demo video](./resources/Demo.mov)
+
+### Screenshots
+
+![Screenshot 1](./resources/app-screenshot-01.png)
+![Screenshot 2](./resources/app-screenshot-02.png)
+![Screenshot 3](./resources/app-screenshot-03.png)
+![Screenshot 4](./resources/app-screenshot-04.png)
+![Screenshot 5](./resources/app-screenshot-05.png)
+![Screenshot 6](./resources/app-screenshot-06.png)
+![Screenshot 7](./resources/app-screenshot-07.png)
+
+---
+
 ## Tech Stack
 
 | Layer | Tech |
