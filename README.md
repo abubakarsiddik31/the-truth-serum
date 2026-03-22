@@ -22,7 +22,7 @@ The backend uses Firecrawl to gather evidence and Gemini to produce a structured
 
 ### Architecture Diagram
 
-![Architecture Diagram](./resources/architecture.png)
+![Architecture Diagram](./resources/architecture-diagram-v2.png)
 
 ---
 
@@ -227,4 +227,4 @@ The default local development path for this repository is `npm run dev`.
 
 ## License
 
-ISC
+MIT
