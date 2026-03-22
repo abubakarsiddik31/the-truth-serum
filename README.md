@@ -18,9 +18,6 @@ The backend uses Firecrawl to gather evidence and Gemini to produce a structured
 
 ### Demo Video
 
-- [Watch on YouTube](https://youtu.be/WZhcX9UncGM)
-- [Watch local demo file](./resources/Demo.mov)
-
 <iframe
   width="100%"
   height="420"
@@ -90,7 +87,7 @@ the-truth-serum/
 │   ├── docker-compose.yml
 │   ├── Dockerfile.client
 │   └── Dockerfile.server
-├── resources/                  # demo video + README screenshots
+├── resources/                  # README screenshots
 └── package.json                # root scripts for monorepo orchestration
 ```
 
