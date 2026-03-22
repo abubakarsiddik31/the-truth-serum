@@ -1,0 +1,22 @@
+services:
+  server:
+    build:
+      context: ../server
+      dockerfile: ../infra/Dockerfile.server
+    ports:
+      - "3001:3001"
+    env_file:
+      - ../server/.env
+    environment:
+      - PORT=3001
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ../client
+      dockerfile: ../infra/Dockerfile.client
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    restart: unless-stopped
