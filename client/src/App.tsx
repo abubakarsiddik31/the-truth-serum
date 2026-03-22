@@ -5,6 +5,7 @@ import { VoiceButton } from "./components/VoiceButton";
 import { ConversationFeed } from "./components/ConversationFeed";
 import { TextInput } from "./components/TextInput";
 import { AnalysisCard } from "./components/AnalysisCard";
+import { useTheme } from "./lib/useTheme";
 import type { FeedEntry, LooseRecord } from "./lib/types";
 
 const API_BASE_URL =
@@ -12,6 +13,7 @@ const API_BASE_URL =
 const PUBLIC_AGENT_ID = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
 
 export default function App() {
+  const { dark, toggle: toggleTheme } = useTheme();
   const [feed, setFeed] = useState<FeedEntry[]>([]);
   const [isScouring, setIsScouring] = useState(false);
 
@@ -135,8 +137,8 @@ export default function App() {
   const agentFeed = feed.filter((f) => f.kind === "agent");
 
   return (
-    <div className="h-dvh w-full bg-[#050505] text-zinc-100 flex flex-col overflow-hidden">
-      <Header isConnected={isConnected} />
+    <div className="h-dvh w-full bg-white dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-hidden">
+      <Header isConnected={isConnected} dark={dark} onToggleTheme={toggleTheme} />
 
       <main className="flex-1 flex flex-col pt-15 overflow-hidden max-w-lg mx-auto w-full">
         <div className="shrink-0 flex flex-col items-center justify-center py-8 px-4">

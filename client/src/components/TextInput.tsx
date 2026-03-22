@@ -17,7 +17,7 @@ export function TextInput({ disabled, onSend }: TextInputProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 px-4 py-3 border-t border-white/5 bg-black/40">
+    <div className="flex items-center gap-2 px-4 py-3 border-t border-zinc-200 dark:border-white/5 bg-white/60 dark:bg-black/40">
       <input
         value={value}
         onChange={(e) => setValue(e.target.value)}
@@ -26,7 +26,7 @@ export function TextInput({ disabled, onSend }: TextInputProps) {
         }}
         placeholder="Or type a question..."
         disabled={disabled}
-        className="flex-1 bg-white/5 rounded-xl px-4 py-3 text-sm text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-red-500/30 border border-white/5 disabled:opacity-30"
+        className="flex-1 bg-zinc-100 dark:bg-white/5 rounded-xl px-4 py-3 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-red-500/30 border border-zinc-200 dark:border-white/5 disabled:opacity-30"
       />
       <button
         onClick={handleSend}
