@@ -8,6 +8,8 @@ export type LooseRecord = Record<string, unknown>;
 
 export type AppMode = 'voice' | 'text';
 
+export type SearchTier = 'reddit' | 'reviews' | 'web';
+
 export interface Verdict {
   verdict: 'legit' | 'sketchy' | 'mixed' | 'unknown';
   confidence: number;
@@ -24,6 +26,9 @@ export interface ShowdownResult {
   type: 'showdown';
   leftQuery: string;
   rightQuery: string;
+  leftTier: SearchTier;
+  rightTier: SearchTier;
+  source_count: number;
   left: Verdict;
   right: Verdict;
   winner: string;
@@ -33,6 +38,8 @@ export interface ShowdownResult {
 export interface VerdictResult {
   type: 'verdict';
   query: string;
+  tier: SearchTier;
+  source_count: number;
   verdict: Verdict['verdict'];
   confidence: number;
   summary: string;

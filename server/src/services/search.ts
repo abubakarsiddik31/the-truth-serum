@@ -1,9 +1,12 @@
 import firecrawl from '../config/firecrawl';
 
-interface SearchResult {
+export type SearchTier = 'reddit' | 'reviews' | 'web';
+
+export interface SearchResult {
   result: string;
   topic: string;
   source_count: number;
+  tier: SearchTier;
 }
 
 async function firecrawlSearch(query: string, limit: number) {
@@ -15,8 +18,8 @@ async function firecrawlSearch(query: string, limit: number) {
   return (raw.web ?? raw.data ?? []) as Array<Record<string, unknown>>;
 }
 
-const MAX_CONTENT_PER_SOURCE = 1500;
-const MAX_TOTAL_CONTENT = 12000;
+const MAX_CONTENT_PER_SOURCE = 3000;
+const MAX_TOTAL_CONTENT = 30000;
 
 export async function searchTopic(topic: string): Promise<SearchResult> {
   if (!firecrawl) {
@@ -25,25 +28,29 @@ export async function searchTopic(topic: string): Promise<SearchResult> {
 
   console.log(`[truth-serum] searching: "${topic}"`);
 
+  let tier: SearchTier = 'reddit';
+
   // 1. Try Reddit/forums first for authentic user opinions
   let searchData = await firecrawlSearch(
     `${topic} (site:reddit.com OR site:forum.com)`,
-    10,
+    15,
   );
 
   // 2. If nothing on Reddit, broaden to review sites
   if (!searchData.length) {
+    tier = 'reviews';
     console.log(`[truth-serum] no Reddit results, trying review sites`);
     searchData = await firecrawlSearch(
       `${topic} review OR opinions OR complaints OR experience`,
-      10,
+      15,
     );
   }
 
   // 3. Last resort: broad web search
   if (!searchData.length) {
+    tier = 'web';
     console.log(`[truth-serum] no review results, trying broad search`);
-    searchData = await firecrawlSearch(topic, 10);
+    searchData = await firecrawlSearch(topic, 15);
   }
 
   if (!searchData.length) {
@@ -51,6 +58,7 @@ export async function searchTopic(topic: string): Promise<SearchResult> {
       result: `No results found for "${topic}". Either it's too obscure or there's no public discussion yet.`,
       topic,
       source_count: 0,
+      tier,
     };
   }
 
@@ -87,5 +95,6 @@ export async function searchTopic(topic: string): Promise<SearchResult> {
     result,
     topic,
     source_count: sources.length,
+    tier,
   };
 }

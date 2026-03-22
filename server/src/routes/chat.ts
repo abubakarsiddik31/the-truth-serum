@@ -35,6 +35,9 @@ router.post('/', async (req, res) => {
         type: 'showdown' as const,
         leftQuery: trimmedQuery,
         rightQuery: trimmedCompare,
+        leftTier: leftSearch.tier,
+        rightTier: rightSearch.tier,
+        source_count: leftSearch.source_count + rightSearch.source_count,
         ...showdown,
       });
     }
@@ -47,6 +50,8 @@ router.post('/', async (req, res) => {
     return res.json({
       type: 'verdict' as const,
       query: trimmedQuery,
+      tier: searchResult.tier,
+      source_count: searchResult.source_count,
       ...verdict,
     });
   } catch (error) {

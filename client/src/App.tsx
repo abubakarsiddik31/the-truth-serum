@@ -176,6 +176,8 @@ export default function App() {
       setChatResult({
         type: "verdict",
         query,
+        tier: "web",
+        source_count: 0,
         verdict: "unknown",
         confidence: 0,
         summary: "Something went wrong. Please try again.",

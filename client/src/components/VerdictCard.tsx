@@ -1,8 +1,14 @@
-import { ThumbsUp, ThumbsDown, Quote, Share2, RotateCcw, ExternalLink } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Quote, Share2, RotateCcw, ExternalLink, Globe, MessageCircle, Star } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { TruthMeter } from './TruthMeter';
 import { HypeTimeline } from './HypeTimeline';
-import type { VerdictResult } from '../lib/types';
+import type { VerdictResult, SearchTier } from '../lib/types';
+
+const tierInfo: Record<SearchTier, { icon: typeof Globe; label: string; color: string }> = {
+  reddit: { icon: MessageCircle, label: 'Reddit & Forums', color: 'text-orange-500' },
+  reviews: { icon: Star, label: 'Review Sites', color: 'text-blue-500' },
+  web: { icon: Globe, label: 'Broad Web', color: 'text-zinc-500' },
+};
 
 type VerdictCardProps = {
   result: VerdictResult;
@@ -51,6 +57,20 @@ export function VerdictCard({ result, onNewSearch }: VerdictCardProps) {
         <p className="text-center text-sm font-bold text-zinc-700 dark:text-zinc-300">
           {result.tldr}
         </p>
+
+        {/* Source badge */}
+        {result.tier && (() => {
+          const info = tierInfo[result.tier];
+          const Icon = info.icon;
+          return (
+            <div className="flex items-center justify-center gap-1.5">
+              <Icon className={cn('w-3.5 h-3.5', info.color)} />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                {info.label} &middot; {result.source_count} sources scraped
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Summary */}
