@@ -28,7 +28,8 @@ export function VerdictCard({ result, onNewSearch }: VerdictCardProps) {
 
   const handleShare = async () => {
     const bestQuote = result.quotes[0]?.text || result.tldr;
-    const text = `Truth Serum says ${result.query} is: ${style.label} (${result.confidence}%)\n"${bestQuote}"\n#ElevenHacks @firecrawl @elevenlabs`;
+    const score = result.truth_score ?? result.confidence;
+    const text = `Truth Serum says ${result.query} is: ${style.label} (${score}%)\n"${bestQuote}"\n#ElevenHacks @firecrawl @elevenlabs`;
 
     if (navigator.share) {
       try {
@@ -51,7 +52,7 @@ export function VerdictCard({ result, onNewSearch }: VerdictCardProps) {
             {style.label}
           </span>
           <span className={cn('ml-2 text-lg font-bold', style.text)}>
-            {result.confidence}%
+            {result.truth_score ?? result.confidence}%
           </span>
         </div>
 

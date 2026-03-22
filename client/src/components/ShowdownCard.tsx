@@ -62,7 +62,7 @@ function VerdictModal({ name, verdict, onClose }: { name: string; verdict: Verdi
                 {style.label}
               </span>
               <span className={cn('ml-2 text-lg font-bold', style.text)}>
-                {verdict.confidence}%
+                {verdict.truth_score ?? verdict.confidence}%
               </span>
             </div>
 
@@ -156,7 +156,7 @@ function MiniVerdict({ name, verdict, isWinner, onClick }: { name: string; verdi
       </div>
 
       <p className={cn('text-center text-[11px] font-black uppercase', verdictColor[verdict.verdict])}>
-        {verdict.verdict} ({verdict.confidence}%)
+        {verdict.verdict} ({verdict.truth_score ?? verdict.confidence}%)
       </p>
 
       <p className="text-[11px] text-center text-zinc-500 dark:text-zinc-400 line-clamp-2">{verdict.tldr}</p>
