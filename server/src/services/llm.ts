@@ -88,7 +88,7 @@ export async function analyzeVerdict(query: string, rawContent: string): Promise
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-flash-latest',
       generationConfig: { responseMimeType: 'application/json' },
     });
 
@@ -121,7 +121,7 @@ export async function analyzeShowdown(
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-flash-latest',
       generationConfig: { responseMimeType: 'application/json' },
     });
 
