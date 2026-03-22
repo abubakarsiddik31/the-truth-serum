@@ -45,6 +45,7 @@ router.post('/', async (req, res) => {
         leftTier: leftSearch.tier,
         rightTier: rightSearch.tier,
         source_count: leftSearch.source_count + rightSearch.source_count,
+        sources: [...leftSearch.sources, ...rightSearch.sources],
         ...showdown,
       });
     }
@@ -75,6 +76,7 @@ router.post('/', async (req, res) => {
       query: trimmedQuery,
       tier: searchResult.tier,
       source_count: searchResult.source_count,
+      sources: searchResult.sources,
       ...verdict,
     });
   } catch (error) {

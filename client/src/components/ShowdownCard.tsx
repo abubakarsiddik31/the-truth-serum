@@ -253,6 +253,7 @@ export function ShowdownCard({ result, onNewSearch }: ShowdownCardProps) {
         <div className="flex gap-3">
           <SourcesPanel
             quotes={[...(result.left?.quotes ?? []), ...(result.right?.quotes ?? [])]}
+            sources={result.sources}
             sourceCount={result.source_count}
           />
           <button

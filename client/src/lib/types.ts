@@ -10,6 +10,11 @@ export type AppMode = 'voice' | 'text';
 
 export type SearchTier = 'reddit' | 'reviews' | 'web';
 
+export interface SourceMeta {
+  title: string;
+  url: string;
+}
+
 export interface Verdict {
   verdict: 'legit' | 'sketchy' | 'mixed' | 'unknown';
   confidence: number;
@@ -30,6 +35,7 @@ export interface ShowdownResult {
   leftTier: SearchTier;
   rightTier: SearchTier;
   source_count: number;
+  sources?: SourceMeta[];
   left: Verdict;
   right: Verdict;
   winner: string;
@@ -41,6 +47,7 @@ export interface VerdictResult {
   query: string;
   tier: SearchTier;
   source_count: number;
+  sources?: SourceMeta[];
   verdict: Verdict['verdict'];
   confidence: number;
   truth_score: number;

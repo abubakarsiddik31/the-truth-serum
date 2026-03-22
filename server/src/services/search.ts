@@ -2,11 +2,17 @@ import firecrawl from '../config/firecrawl';
 
 export type SearchTier = 'reddit' | 'reviews' | 'web';
 
+export interface SourceMeta {
+  title: string;
+  url: string;
+}
+
 export interface SearchResult {
   result: string;
   topic: string;
   source_count: number;
   tier: SearchTier;
+  sources: SourceMeta[];
 }
 
 async function firecrawlSearch(query: string, limit: number) {
@@ -59,6 +65,7 @@ export async function searchTopic(topic: string): Promise<SearchResult> {
       topic,
       source_count: 0,
       tier,
+      sources: [],
     };
   }
 
@@ -66,7 +73,8 @@ export async function searchTopic(topic: string): Promise<SearchResult> {
 
   // Pass raw content to the LLM — let it decide what matters
   let totalLength = 0;
-  const sources: string[] = [];
+  const blocks: string[] = [];
+  const sourceMetas: SourceMeta[] = [];
 
   for (const item of searchData) {
     const meta = (item.metadata ?? {}) as Record<string, unknown>;
@@ -78,7 +86,8 @@ export async function searchTopic(topic: string): Promise<SearchResult> {
     const block = `### ${title}\nSource: ${url}\n\n${trimmed}`;
 
     if (totalLength + block.length > MAX_TOTAL_CONTENT) break;
-    sources.push(block);
+    blocks.push(block);
+    sourceMetas.push({ title, url });
     totalLength += block.length;
   }
 
@@ -88,13 +97,14 @@ export async function searchTopic(topic: string): Promise<SearchResult> {
     '',
     '--- RAW WEB CONTENT ---',
     '',
-    sources.join('\n\n---\n\n'),
+    blocks.join('\n\n---\n\n'),
   ].join('\n');
 
   return {
     result,
     topic,
-    source_count: sources.length,
+    source_count: blocks.length,
     tier,
+    sources: sourceMetas,
   };
 }

@@ -132,7 +132,7 @@ export function VerdictCard({ result, onNewSearch }: VerdictCardProps) {
 
       {/* Actions */}
       <div className="flex gap-3">
-        <SourcesPanel quotes={result.quotes} sourceCount={result.source_count} />
+        <SourcesPanel quotes={result.quotes} sources={result.sources} sourceCount={result.source_count} />
         <button
           onClick={handleShare}
           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors active:scale-95"
