@@ -28,6 +28,10 @@ The backend uses Firecrawl to gather evidence and Gemini to produce a structured
   allowfullscreen
 ></iframe>
 
+### Architecture Diagram
+
+![Architecture Diagram](./resources/architecture.png)
+
 ---
 
 ## What the App Does
