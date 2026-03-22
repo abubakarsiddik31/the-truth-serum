@@ -14,19 +14,11 @@ The backend uses Firecrawl to gather evidence and Gemini to produce a structured
 
 ---
 
-## Demo and Screenshots
+## Demo Video
 
-### Demo Video
+[![Watch the demo video](https://img.youtube.com/vi/WZhcX9UncGM/maxresdefault.jpg)](https://www.youtube.com/watch?v=WZhcX9UncGM)
 
-<iframe
-  width="100%"
-  height="420"
-  src="https://www.youtube.com/embed/WZhcX9UncGM"
-  title="The Truth Serum Demo"
-  frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  allowfullscreen
-></iframe>
+[Watch Demo Video on YouTube](https://www.youtube.com/watch?v=WZhcX9UncGM)
 
 ### Architecture Diagram
 
