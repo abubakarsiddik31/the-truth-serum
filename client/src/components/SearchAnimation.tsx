@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const PHASES = [
+const SEARCH_PHASES = [
   'Scanning Reddit...',
   'Crawling review sites...',
   'Analyzing user opinions...',
@@ -8,15 +8,31 @@ const PHASES = [
   'Extracting the truth...',
 ];
 
+const URL_PHASES = [
+  'Scraping product page...',
+  'Extracting product details...',
+  'Searching for real opinions...',
+  'Crawling Reddit & forums...',
+  'Cross-referencing with reviews...',
+  'Analyzing everything...',
+];
+
 export function SearchAnimation({ query }: { query: string }) {
   const [phase, setPhase] = useState(0);
+  const isUrl = /^https?:\/\//i.test(query);
+  const phases = isUrl ? URL_PHASES : SEARCH_PHASES;
 
   useEffect(() => {
+    setPhase(0);
     const interval = setInterval(() => {
-      setPhase((p) => (p + 1) % PHASES.length);
+      setPhase((p) => (p + 1) % phases.length);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [query, phases.length]);
+
+  const displayQuery = isUrl
+    ? (() => { try { return new URL(query).hostname; } catch { return query; } })()
+    : query;
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-6">
@@ -31,11 +47,11 @@ export function SearchAnimation({ query }: { query: string }) {
       </div>
 
       <p className="text-sm font-bold text-zinc-900 dark:text-white mb-2">
-        Investigating &ldquo;{query}&rdquo;
+        {isUrl ? <>Analyzing {displayQuery}</> : <>Investigating &ldquo;{displayQuery}&rdquo;</>}
       </p>
 
       <p className="text-xs text-red-500 dark:text-red-400 font-mono animate-pulse min-h-[1.25rem]">
-        {PHASES[phase]}
+        {phases[phase]}
       </p>
     </div>
   );

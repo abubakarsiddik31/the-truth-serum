@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, Search } from 'lucide-react';
+import { Send, Search, Link } from 'lucide-react';
 import type { AppMode } from '../lib/types';
 
 type TextInputProps = {
@@ -18,8 +18,10 @@ export function TextInput({ mode, disabled, onSend }: TextInputProps) {
     setValue('');
   };
 
+  const isUrl = /^https?:\/\//i.test(value.trim());
+
   const placeholder = mode === 'text'
-    ? 'Search any product, brand, or trend...'
+    ? 'Product name, URL, or "X vs Y"...'
     : 'Type a message...';
 
   return (
@@ -37,7 +39,7 @@ export function TextInput({ mode, disabled, onSend }: TextInputProps) {
         disabled={disabled || !value.trim()}
         className="w-11 h-11 flex items-center justify-center rounded-xl bg-red-600 text-white disabled:opacity-20 transition-opacity active:scale-95"
       >
-        {mode === 'text' ? <Search className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+        {mode === 'text' ? (isUrl ? <Link className="w-4 h-4" /> : <Search className="w-4 h-4" />) : <Send className="w-4 h-4" />}
       </button>
     </div>
   );

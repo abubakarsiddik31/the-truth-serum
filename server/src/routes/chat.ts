@@ -1,8 +1,15 @@
 import { Router } from 'express';
 import { searchTopic } from '../services/search';
+import { scrapeAndSearch } from '../services/scrape';
 import { analyzeVerdict, analyzeShowdown } from '../services/llm';
 
 const router = Router();
+
+const URL_REGEX = /^https?:\/\//i;
+
+function isUrl(input: string): boolean {
+  return URL_REGEX.test(input);
+}
 
 router.post('/', async (req, res) => {
   const { query, compare } = req.body as { query?: string; compare?: string };
@@ -14,7 +21,7 @@ router.post('/', async (req, res) => {
   const trimmedQuery = query.trim();
 
   try {
-    // Showdown mode: compare two products
+    // Showdown mode
     if (compare && typeof compare === 'string' && compare.trim()) {
       const trimmedCompare = compare.trim();
       console.log(`[truth-serum] showdown: "${trimmedQuery}" vs "${trimmedCompare}"`);
@@ -42,7 +49,23 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Single verdict mode
+    // URL mode: scrape the product page + search for opinions
+    if (isUrl(trimmedQuery)) {
+      console.log(`[truth-serum] URL detected, scraping: ${trimmedQuery}`);
+      const scrapeResult = await scrapeAndSearch(trimmedQuery);
+      const verdict = await analyzeVerdict(scrapeResult.product_name, scrapeResult.product_content);
+
+      return res.json({
+        type: 'verdict' as const,
+        query: scrapeResult.product_name,
+        url: scrapeResult.url,
+        tier: 'reddit' as const,
+        source_count: scrapeResult.source_count,
+        ...verdict,
+      });
+    }
+
+    // Standard text query
     console.log(`[truth-serum] analyzing: "${trimmedQuery}"`);
     const searchResult = await searchTopic(trimmedQuery);
     const verdict = await analyzeVerdict(trimmedQuery, searchResult.result);

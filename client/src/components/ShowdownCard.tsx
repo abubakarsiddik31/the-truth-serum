@@ -1,7 +1,7 @@
 import { Crown, Share2, RotateCcw, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { TruthMeter } from './TruthMeter';
-import type { ShowdownResult } from '../lib/types';
+import type { ShowdownResult, Verdict } from '../lib/types';
 
 type ShowdownCardProps = {
   result: ShowdownResult;
@@ -15,47 +15,49 @@ const verdictColor = {
   unknown: 'text-zinc-500',
 };
 
-function MiniVerdict({ name, verdict, isWinner }: { name: string; verdict: ShowdownResult['left']; isWinner: boolean }) {
+function MiniVerdict({ name, verdict, isWinner }: { name: string; verdict: Verdict; isWinner: boolean }) {
   return (
     <div className={cn(
-      'flex-1 p-4 rounded-2xl border space-y-3 transition-all',
+      'min-w-0 flex-1 p-3 rounded-2xl border space-y-2 transition-all overflow-hidden',
       isWinner
         ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30 ring-2 ring-amber-400/30'
         : 'bg-zinc-50 dark:bg-white/[0.03] border-zinc-200 dark:border-white/10'
     )}>
       {isWinner && (
         <div className="flex items-center gap-1 justify-center">
-          <Crown className="w-4 h-4 text-amber-500" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">Winner</span>
+          <Crown className="w-3.5 h-3.5 text-amber-500" />
+          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-500">Winner</span>
         </div>
       )}
 
-      <p className="text-sm font-black text-center text-zinc-900 dark:text-white truncate">{name}</p>
+      <p className="text-xs font-black text-center text-zinc-900 dark:text-white truncate">{name}</p>
 
-      <TruthMeter value={verdict.confidence} searching={false} verdict={verdict.verdict} />
+      <div className="flex justify-center scale-75 -my-2">
+        <TruthMeter value={verdict.confidence} searching={false} verdict={verdict.verdict} />
+      </div>
 
-      <p className={cn('text-center text-xs font-black uppercase', verdictColor[verdict.verdict])}>
+      <p className={cn('text-center text-[11px] font-black uppercase', verdictColor[verdict.verdict])}>
         {verdict.verdict} ({verdict.confidence}%)
       </p>
 
-      <p className="text-xs text-center text-zinc-500 dark:text-zinc-400">{verdict.tldr}</p>
+      <p className="text-[11px] text-center text-zinc-500 dark:text-zinc-400 line-clamp-2">{verdict.tldr}</p>
 
       {verdict.pros.length > 0 && (
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {verdict.pros.slice(0, 2).map((p, i) => (
-            <div key={i} className="flex items-start gap-1">
+            <div key={i} className="flex items-start gap-1 min-w-0">
               <ThumbsUp className="w-3 h-3 mt-0.5 text-green-500 shrink-0" />
-              <span className="text-[11px] text-zinc-600 dark:text-zinc-400">{p}</span>
+              <span className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">{p}</span>
             </div>
           ))}
         </div>
       )}
       {verdict.cons.length > 0 && (
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {verdict.cons.slice(0, 2).map((c, i) => (
-            <div key={i} className="flex items-start gap-1">
+            <div key={i} className="flex items-start gap-1 min-w-0">
               <ThumbsDown className="w-3 h-3 mt-0.5 text-red-500 shrink-0" />
-              <span className="text-[11px] text-zinc-600 dark:text-zinc-400">{c}</span>
+              <span className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">{c}</span>
             </div>
           ))}
         </div>
@@ -77,30 +79,34 @@ export function ShowdownCard({ result, onNewSearch }: ShowdownCardProps) {
   };
 
   return (
-    <div className="mx-4 mb-4 space-y-4 animate-[fadeSlideUp_0.6s_ease-out]">
-      {/* VS Header */}
+    <div className="mx-4 mb-4 space-y-4 animate-[fadeSlideUp_0.6s_ease-out] overflow-hidden">
       <div className="text-center">
         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-600">
           Product Showdown
         </span>
       </div>
 
-      {/* Side by side */}
-      <div className="flex gap-3">
+      {/* Side by side — constrained, no horizontal overflow */}
+      <div className="flex gap-2 min-w-0 overflow-hidden">
         <MiniVerdict name={result.leftQuery} verdict={result.left} isWinner={leftWins} />
-        <div className="flex items-center">
-          <span className="text-lg font-black text-red-500">VS</span>
+        <div className="flex items-center shrink-0 px-1">
+          <span className="text-sm font-black text-red-500">VS</span>
         </div>
         <MiniVerdict name={result.rightQuery} verdict={result.right} isWinner={!leftWins} />
       </div>
 
       {/* Winner reason */}
-      <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-center">
+      <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-center">
         <p className="text-xs font-bold text-amber-700 dark:text-amber-300">
-          <Crown className="w-4 h-4 inline mr-1" />
+          <Crown className="w-3.5 h-3.5 inline mr-1" />
           {result.reason}
         </p>
       </div>
+
+      {/* Source count */}
+      <p className="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+        {result.source_count} sources analyzed via Firecrawl
+      </p>
 
       {/* Actions */}
       <div className="flex gap-3">
