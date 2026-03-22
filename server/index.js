@@ -225,11 +225,12 @@ app.post('/api/search', async (req, res) => {
   console.log(`[Truth Serum] Scouring the depths for: ${topic}...`);
 
   try {
-    // Search Reddit using Firecrawl
+    // Optimized search: limit to 3 results and use a shorter timeout if possible.
+    // Full scraping of 5 pages often exceeds the 20s-30s window ElevenLabs allows for tools.
     const searchResponse = await firecrawl.search(
       `${topic} (site:reddit.com OR site:forum.com)`,
       {
-        limit: 5,
+        limit: 3,
         scrapeOptions: {
           formats: ['markdown'],
           onlyMainContent: true
@@ -288,23 +289,21 @@ app.post('/api/search', async (req, res) => {
       'Respond with blunt honesty, but stay factual and avoid claims not present in this evidence.'
     ].join('\n');
 
-    return res.json({
+    // Return a clean response. ElevenLabs tools work best when the main
+    // answer is in the "result" field or returned as a string.
+    return res.status(200).json({
+      result: summary,
       topic,
-      findings: topFindings,
-      threads,
-      summary,
-      result: summary
+      found_count: topFindings.length
     });
   } catch (error) {
     const message = error.response?.data || error.message;
     console.error('[Error] Firecrawl Search failed:', message);
     const fallback = 'The Truth Serum is temporarily clogged. I could not retrieve live Reddit/forum evidence this turn.';
-    return res.json({
+    return res.status(200).json({
+      result: fallback,
       topic,
-      findings: [],
-      threads: [],
-      summary: fallback,
-      result: fallback
+      error: true
     });
   }
 });
