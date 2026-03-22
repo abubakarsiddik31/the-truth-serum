@@ -222,13 +222,14 @@ app.post('/api/search', async (req, res) => {
     return res.status(500).json({ error: 'Firecrawl client is not initialized.' });
   }
 
-  console.log(`[Truth Serum] Scouring the depths for: ${topic}...`);
+  console.log(`[Truth Serum] Scouring the depths for: "${topic}"...`);
+  const query = `${topic} (site:reddit.com OR site:forum.com)`;
+  console.log(`[Truth Serum] Firecrawl Query: ${query}`);
 
   try {
     // Optimized search: limit to 3 results and use a shorter timeout if possible.
-    // Full scraping of 5 pages often exceeds the 20s-30s window ElevenLabs allows for tools.
     const searchResponse = await firecrawl.search(
-      `${topic} (site:reddit.com OR site:forum.com)`,
+      query,
       {
         limit: 3,
         scrapeOptions: {
@@ -238,28 +239,36 @@ app.post('/api/search', async (req, res) => {
       }
     );
 
-    if (!searchResponse.success || !searchResponse.data || searchResponse.data.length === 0) {
+    console.log(`[Truth Serum] Firecrawl Search complete.`);
+    
+    // In Firecrawl v4+, results are often under the 'web' property
+    const searchData = searchResponse.web || searchResponse.data || [];
+    
+    if (!searchData || searchData.length === 0) {
+      console.warn(`[Truth Serum] No results found. Raw response:`, JSON.stringify(searchResponse).slice(0, 500));
       const summary =
         "I couldn't find any real talk on this. Either it's too obscure or everyone's already been silenced by the marketing department.";
-      return res.json({
+      return res.status(200).json({
         topic,
         findings: [],
         threads: [],
-        summary,
-        result: summary
+        result: summary,
+        debug: { status: 'no_results', raw: searchResponse }
       });
     }
 
-    const threads = searchResponse.data.map((item) => {
-      const title = item.metadata?.title || 'Unknown Thread';
+    console.log(`[Truth Serum] Results Found: ${searchData.length}`);
+
+    const threads = searchData.map((item) => {
+      const title = item.title || item.metadata?.title || 'Unknown Thread';
       const url = item.url || item.metadata?.sourceURL || '';
-      const markdown = item.markdown || '';
+      const markdown = item.markdown || item.description || '';
       const findings = extractFindings(markdown);
 
       return {
         title,
         url,
-        findings,
+        findings: findings.length > 0 ? findings : [item.description].filter(Boolean),
         excerpt: markdown.slice(0, 600)
       };
     });
@@ -294,7 +303,11 @@ app.post('/api/search', async (req, res) => {
     return res.status(200).json({
       result: summary,
       topic,
-      found_count: topFindings.length
+      found_count: topFindings.length,
+      debug: {
+        raw_results_count: searchResponse.data?.length || 0,
+        threads_scanned: threads.map(t => t.title)
+      }
     });
   } catch (error) {
     const message = error.response?.data || error.message;
