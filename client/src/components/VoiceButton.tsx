@@ -7,18 +7,22 @@ type VoiceButtonProps = {
   isSpeaking: boolean;
   onStart: () => void;
   onStop: () => void;
+  disabled?: boolean;
 };
 
-export function VoiceButton({ isConnected, isSpeaking, onStart, onStop }: VoiceButtonProps) {
+export function VoiceButton({ isConnected, isSpeaking, onStart, onStop, disabled }: VoiceButtonProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       <button
         onClick={isConnected ? onStop : onStart}
+        disabled={disabled && !isConnected}
         className={cn(
           'relative w-28 h-28 rounded-full flex items-center justify-center transition-all duration-500 active:scale-95',
-          isConnected
-            ? 'bg-zinc-200 dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-white'
-            : 'bg-red-600 border-2 border-red-500 text-white shadow-[0_0_60px_rgba(239,68,68,0.25)]'
+          disabled && !isConnected
+            ? 'bg-zinc-200 dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-600 cursor-not-allowed opacity-50'
+            : isConnected
+              ? 'bg-zinc-200 dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-white'
+              : 'bg-red-600 border-2 border-red-500 text-white shadow-[0_0_60px_rgba(239,68,68,0.25)]'
         )}
       >
         {isConnected && isSpeaking && (
@@ -45,7 +49,9 @@ export function VoiceButton({ isConnected, isSpeaking, onStart, onStop }: VoiceB
           ? isSpeaking
             ? 'Agent speaking...'
             : 'Listening to you...'
-          : 'Tap to start'}
+          : disabled
+            ? 'Configure agent below'
+            : 'Tap to start'}
       </p>
     </div>
   );

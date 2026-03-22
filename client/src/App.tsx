@@ -10,6 +10,7 @@ import { TruthMeter } from "./components/TruthMeter";
 import { VerdictCard } from "./components/VerdictCard";
 import { ShowdownCard } from "./components/ShowdownCard";
 import { SuggestedFollowUps } from "./components/SuggestedFollowUps";
+import { VoiceSetupGuide } from "./components/VoiceSetupGuide";
 import { useTheme } from "./lib/useTheme";
 import { Mic } from "lucide-react";
 import type {
@@ -28,6 +29,36 @@ const PUBLIC_AGENT_ID = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
 export default function App() {
   const { dark, toggle: toggleTheme } = useTheme();
   const [mode, setMode] = useState<AppMode>("text");
+  const [showVoiceSetup, setShowVoiceSetup] = useState(false);
+
+  // Custom agent config entered by the user via setup guide
+  const [customAgentId, setCustomAgentId] = useState(
+    () => localStorage.getItem("ts_agent_id") || "",
+  );
+  const [customWebhookUrl, setCustomWebhookUrl] = useState(
+    () => localStorage.getItem("ts_webhook_url") || "",
+  );
+
+  const handleSaveAgent = (agentId: string, webhookUrl: string) => {
+    setCustomAgentId(agentId);
+    setCustomWebhookUrl(webhookUrl);
+    localStorage.setItem("ts_agent_id", agentId);
+    localStorage.setItem("ts_webhook_url", webhookUrl);
+    setShowVoiceSetup(false);
+  };
+
+  const handleToggleMode = () => {
+    setMode((m) => {
+      if (m === "text") {
+        setShowVoiceSetup(true); // always show setup when entering voice
+        return "voice";
+      }
+      return "text";
+    });
+  };
+
+  const activeAgentId = PUBLIC_AGENT_ID || customAgentId;
+  const voiceReady = !!activeAgentId;
   const [feed, setFeed] = useState<FeedEntry[]>([]);
   const [isScouring, setIsScouring] = useState(false);
 
@@ -157,11 +188,12 @@ export default function App() {
   };
 
   const startSession = async () => {
+    if (!voiceReady) return;
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (PUBLIC_AGENT_ID) {
+      if (activeAgentId) {
         await conversation.startSession({
-          agentId: PUBLIC_AGENT_ID,
+          agentId: activeAgentId,
           connectionType: "webrtc",
         });
         return;
@@ -190,7 +222,7 @@ export default function App() {
 
   const sendVoiceMessage = async (text: string) => {
     try {
-      await conversation.sendUserMessage(text);
+      conversation.sendUserMessage(text);
       pushFeed("user", text);
     } catch (err) {
       pushFeed(
@@ -262,13 +294,22 @@ export default function App() {
         dark={dark}
         mode={mode}
         onToggleTheme={toggleTheme}
-        onToggleMode={() => setMode((m) => (m === "voice" ? "text" : "voice"))}
+        onToggleMode={handleToggleMode}
       />
 
-      <main className="flex-1 flex flex-col pt-14 overflow-hidden max-w-lg mx-auto w-full">
+      <main className="flex-1 flex flex-col pt-28 overflow-hidden max-w-lg mx-auto w-full">
         {mode === "voice" ? (
           // ── Voice Mode ──
-          <>
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            {/* Setup overlay — sits inside the post-header content area */}
+            {showVoiceSetup && (
+              <VoiceSetupGuide
+                onSave={handleSaveAgent}
+                savedAgentId={customAgentId}
+                savedWebhookUrl={customWebhookUrl}
+              />
+            )}
+
             <div className="shrink-0 flex flex-col items-center justify-center py-4 px-4">
               <VoiceButton
                 isConnected={isConnected}
@@ -319,7 +360,7 @@ export default function App() {
               disabled={!isConnected}
               onSend={sendVoiceMessage}
             />
-          </>
+          </div>
         ) : (
           // ── Text Mode ──
           <>
@@ -347,7 +388,7 @@ export default function App() {
             {/* Voice CTA banner in text mode */}
             {!isSearching && (
               <button
-                onClick={() => setMode("voice")}
+                onClick={handleToggleMode}
                 className="mx-4 mb-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors active:scale-[0.98]"
               >
                 <Mic className="w-3.5 h-3.5" />
