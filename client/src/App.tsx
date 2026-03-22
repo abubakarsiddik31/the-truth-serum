@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { Header } from "./components/Header";
 import { VoiceButton } from "./components/VoiceButton";
@@ -9,6 +9,7 @@ import { SearchAnimation } from "./components/SearchAnimation";
 import { TruthMeter } from "./components/TruthMeter";
 import { VerdictCard } from "./components/VerdictCard";
 import { ShowdownCard } from "./components/ShowdownCard";
+import { SuggestedFollowUps } from "./components/SuggestedFollowUps";
 import { useTheme } from "./lib/useTheme";
 import { Mic } from "lucide-react";
 import type {
@@ -35,6 +36,11 @@ export default function App() {
   const [isSearching, setIsSearching] = useState(false);
   const [chatResult, setChatResult] = useState<ChatResult | null>(null);
 
+  // Voice mode: parallel verdict card
+  const [voiceVerdict, setVoiceVerdict] = useState<VerdictResult | null>(null);
+  const [voiceSearching, setVoiceSearching] = useState(false);
+  const lastVoiceQuery = useRef("");
+
   const pushFeed = useCallback((kind: FeedEntry["kind"], text: string) => {
     setFeed((prev) =>
       [...prev, { id: Date.now() + Math.random(), kind, text }].slice(-100),
@@ -44,6 +50,31 @@ export default function App() {
   const asRecord = (v: unknown): LooseRecord =>
     v && typeof v === "object" ? (v as LooseRecord) : {};
   const asText = (v: unknown): string => (typeof v === "string" ? v : "");
+
+  // Fire /api/chat in the background when voice agent triggers a tool
+  const fetchVoiceVerdict = async (topic: string) => {
+    if (!topic || topic === lastVoiceQuery.current) return;
+    lastVoiceQuery.current = topic;
+    setVoiceSearching(true);
+    setVoiceVerdict(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: topic }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.type === "verdict") {
+        setVoiceVerdict(data as VerdictResult);
+      }
+    } catch {
+      // Silent fail — voice agent still works
+    } finally {
+      setVoiceSearching(false);
+    }
+  };
 
   // ── Voice mode (ElevenLabs) ──
   const conversation = useConversation({
@@ -56,6 +87,11 @@ export default function App() {
         connected: "Connected",
       };
       pushFeed("status", labels[status] || `Status: ${status}`);
+      if (status === "disconnected") {
+        setVoiceVerdict(null);
+        setVoiceSearching(false);
+        lastVoiceQuery.current = "";
+      }
     },
     onMessage: (event) => {
       const msg = asRecord(event);
@@ -74,12 +110,21 @@ export default function App() {
       }
     },
     onAgentToolRequest: (event) => {
-      const name =
-        asText(asRecord(event).tool_name) ||
-        asText(asRecord(event).toolName) ||
-        "tool";
+      const rec = asRecord(event);
+      const name = asText(rec.tool_name) || asText(rec.toolName) || "tool";
       pushFeed("tool", `Searching: ${name}`);
       setIsScouring(true);
+
+      // Extract the topic from the tool payload and fire parallel verdict
+      const params = asRecord(rec.parameters) || asRecord(rec.params) || asRecord(rec.body);
+      const topic =
+        asText(params.topic) ||
+        asText(params.query) ||
+        asText(params.product) ||
+        asText(params.trend);
+      if (topic) {
+        void fetchVoiceVerdict(topic);
+      }
     },
     onAgentToolResponse: (event) => {
       const name =
@@ -156,7 +201,6 @@ export default function App() {
     setChatResult(null);
     setIsSearching(true);
 
-    // Detect showdown: "X vs Y" or "X versus Y"
     const vsMatch = input.match(/^(.+?)\s+(?:vs\.?|versus)\s+(.+)$/i);
     const query = vsMatch ? vsMatch[1].trim() : input;
     const compare = vsMatch ? vsMatch[2].trim() : undefined;
@@ -202,6 +246,10 @@ export default function App() {
   const isSpeaking = conversation.isSpeaking;
   const hasSearched = isSearching || chatResult !== null;
 
+  // Last user message for follow-up suggestions
+  const lastUserFeed = [...feed].reverse().find((f) => f.kind === "user");
+  const showFollowUps = isConnected && !isScouring && lastUserFeed;
+
   return (
     <div className="h-dvh w-full bg-white dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-hidden">
       <Header
@@ -216,7 +264,7 @@ export default function App() {
         {mode === "voice" ? (
           // ── Voice Mode ──
           <>
-            <div className="shrink-0 flex flex-col items-center justify-center py-6 px-4">
+            <div className="shrink-0 flex flex-col items-center justify-center py-4 px-4">
               <VoiceButton
                 isConnected={isConnected}
                 isSpeaking={isSpeaking}
@@ -224,7 +272,38 @@ export default function App() {
                 onStop={stopSession}
               />
             </div>
-            <ConversationFeed feed={feed} isScouring={isScouring} />
+
+            {/* Voice verdict card (parallel with agent) */}
+            <div className="flex-1 overflow-y-auto">
+              {voiceSearching && (
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                    <span className="text-[11px] text-red-600 dark:text-red-400 font-bold uppercase tracking-wider">
+                      Generating visual analysis...
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {voiceVerdict && (
+                <VerdictCard
+                  result={voiceVerdict}
+                  onNewSearch={() => setVoiceVerdict(null)}
+                />
+              )}
+
+              <ConversationFeed feed={feed} isScouring={isScouring} />
+            </div>
+
+            {/* Suggested follow-ups */}
+            {showFollowUps && (
+              <SuggestedFollowUps
+                query={lastUserFeed.text}
+                onSend={sendVoiceMessage}
+              />
+            )}
+
             <TextInput
               mode="voice"
               disabled={!isConnected}
