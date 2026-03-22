@@ -44,7 +44,7 @@ const App: React.FC = () => {
   const pushFeed = (kind: FeedEntry['kind'], text: string) => {
     setFeed((prev) => {
       const next = [...prev, { id: Date.now() + Math.random(), kind, text }];
-      return next.slice(-50);
+      return next.slice(-100);
     });
   };
 
@@ -152,9 +152,13 @@ const App: React.FC = () => {
 
   const isConnected = conversation.status === 'connected';
 
+  // Get agent replies for dossier display
+  const agentFeed = feed.filter(f => f.kind === 'agent');
+  const toolFeed = feed.filter(f => f.kind === 'tool');
+
   return (
     <div className="min-h-screen w-full bg-[#050505] text-zinc-100 flex flex-col font-sans relative overflow-hidden">
-      {/* Scan Line - Tailwind Version */}
+      {/* Scan Line */}
       <div 
         className="fixed top-0 left-0 w-full h-[2px] pointer-events-none z-[100]" 
         style={{ 
@@ -163,29 +167,29 @@ const App: React.FC = () => {
         }} 
       />
       
-      {/* Top Header */}
+      {/* Header */}
       <header className="w-full border-b border-white/10 bg-black/80 backdrop-blur-xl px-12 py-6 flex items-center justify-between z-10 sticky top-0">
         <div className="flex items-center gap-5">
-          <div className="w-12 h-12 bg-red-600 flex items-center justify-center rounded-lg shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+          <div className="w-12 h-12 bg-red-600 flex items-center justify-center rounded-lg shadow-[0_0_30px_rgba(239,68,68,0.3)]">
             <ShieldAlert className="w-7 h-7 text-black" />
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tighter uppercase italic leading-none">
-              TRUTH <span className="text-red-500">SERUM</span>
+              TRUTH <span className="text-red-500 font-black">SERUM</span>
             </h1>
-            <span className="text-[10px] font-bold opacity-40 tracking-[0.3em] uppercase mt-1 block">FEDERAL INVESTIGATION TERMINAL</span>
+            <span className="text-[10px] font-bold opacity-30 tracking-[0.3em] uppercase mt-1 block tracking-[0.4em]">LIVE INTEL TERMINAL</span>
           </div>
         </div>
         
         <div className="flex items-center gap-10">
           <div className="hidden lg:flex items-center gap-4 text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
-            <Radio className={cn("w-5 h-5", isConnected ? "text-red-500 animate-pulse" : "text-zinc-800")} />
+            <Radio className={cn("w-5 h-5 transition-colors", isConnected ? "text-red-500 animate-pulse" : "text-zinc-800")} />
             {isConnected ? "ENCRYPTED UPLINK ACTIVE" : "SIGNAL STANDBY"}
           </div>
           <div className={cn(
             "px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border transition-all duration-700",
             isConnected 
-              ? "bg-red-500/10 border-red-500/50 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)]" 
+              ? "bg-red-500/10 border-red-500/50 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.1)]" 
               : "bg-zinc-900 border-zinc-800 text-zinc-600"
           )}>
             {conversation.status === 'connected' ? "LIVE MONITOR" : "OFFLINE"}
@@ -193,51 +197,45 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col lg:flex-row gap-0 overflow-hidden bg-[radial-gradient(circle_at_50%_50%,_rgba(239,68,68,0.03),_transparent_80%)]">
+      <main className="flex-1 flex flex-col lg:flex-row gap-0 overflow-hidden bg-[radial-gradient(circle_at_50%_50%,_rgba(239,68,68,0.02),_transparent_80%)]">
         
         {/* Sidebar */}
         <aside className="w-full lg:w-[520px] border-r border-white/10 flex flex-col p-10 space-y-10 overflow-y-auto bg-black/30">
           
-          {/* Agent Card */}
-          <div className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl p-10 border border-white/10 relative group transition-all duration-500 hover:bg-white/[0.05] hover:border-red-500/30">
-            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700">
+          <div className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl p-10 border border-white/10 relative group border-white/5 transition-all duration-500 hover:bg-white/[0.05]">
+            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700">
               <Zap className="w-32 h-32 text-red-500" />
             </div>
             
             <div className="flex items-center gap-3 mb-8">
               <Activity className="w-4 h-4 text-red-500" />
-              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-red-500">AGENT PROFILE: SASSY_RE_01</h3>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-red-500">AGENT PROFILE</h3>
             </div>
             
             <div className="flex items-start gap-8 mb-8">
               <div className="relative flex-shrink-0">
                 <div className={cn(
-                  "w-24 h-24 rounded-full flex items-center justify-center relative overflow-hidden transition-all duration-700",
-                  isConnected ? "bg-red-500/10 border-2 border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.2)] scale-105" : "bg-black/60 border-2 border-white/10"
+                  "w-24 h-24 rounded-full flex items-center justify-center relative transition-all duration-700 overflow-hidden border-2",
+                  isConnected ? "border-red-500/50 bg-red-500/5 shadow-[0_0_40px_rgba(239,68,68,0.2)]" : "border-white/10 bg-black/40"
                 )}>
                   {isConnected && (
                     <div className="absolute inset-0" style={{ animation: 'pulse-ring 2s infinite' }}>
-                      <div className="w-full h-full border border-red-500/40 rounded-full" />
+                      <div className="w-full h-full border border-red-500/30 rounded-full" />
                     </div>
                   )}
-                  <Mic className={cn("w-12 h-12 transition-all duration-700", isConnected ? "text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]" : "text-zinc-800")} />
+                  <Mic className={cn("w-12 h-12 transition-all duration-700", isConnected ? "text-red-500" : "text-zinc-800")} />
                 </div>
               </div>
               <div className="flex-1 py-2">
-                <h4 className="text-3xl font-black italic tracking-tighter uppercase mb-2">TRUTH <span className="text-red-500">SEEKER</span></h4>
+                <h4 className="text-3xl font-black italic tracking-tighter uppercase mb-2">SASSY <span className="text-red-500">AGENT</span></h4>
                 <div className="flex flex-wrap gap-2">
-                  <span className="text-[9px] font-black uppercase tracking-widest bg-red-500/20 text-red-400 px-3 py-1 rounded">CYNICAL</span>
-                  <span className="text-[9px] font-black uppercase tracking-widest bg-zinc-800 text-zinc-400 px-3 py-1 rounded">UNFILTERED</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest bg-red-500/20 text-red-400 px-3 py-1 rounded">OSINT</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest bg-zinc-800 text-zinc-400 px-3 py-1 rounded">DEBUNKER</span>
                 </div>
               </div>
             </div>
-            
-            <p className="text-sm text-zinc-400 leading-relaxed italic border-l-4 border-red-500/40 pl-6 py-2">
-              "I translate marketing BS into plain English. If a brand says 'innovative,' it usually means 'we broke something that worked fine.'"
-            </p>
           </div>
 
-          {/* Controls */}
           <div className="space-y-5">
             <button
               onClick={isConnected ? stopSession : startSession}
@@ -245,30 +243,18 @@ const App: React.FC = () => {
                 "w-full h-24 rounded-3xl font-black uppercase tracking-[0.5em] transition-all duration-500 transform active:scale-[0.96] flex items-center justify-center gap-5 text-sm",
                 isConnected 
                   ? "bg-zinc-100 text-black hover:bg-white" 
-                  : "bg-red-600 text-white hover:bg-red-700 shadow-[0_15px_40px_rgba(239,68,68,0.3)] hover:scale-[1.01]"
+                  : "bg-red-600 text-white hover:bg-red-700 shadow-[0_15px_40px_rgba(239,68,68,0.3)]"
               )}
             >
-              {isConnected ? <><MicOff className="w-7 h-7" /> KILL UPLINK</> : <><Mic className="w-7 h-7" /> ENGAGE SERUM</>}
+              {isConnected ? <><MicOff className="w-7 h-7" /> KILL SESSION</> : <><Mic className="w-7 h-7" /> ENGAGE SERUM</>}
             </button>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex flex-col gap-2">
-                <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">SIGNAL QUALITY</span>
-                <span className="text-xs font-black text-zinc-400 uppercase tracking-tight">{isConnected ? "HIGH BANDWIDTH" : "---"}</span>
-              </div>
-              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex flex-col gap-2">
-                <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">PROTOCOL</span>
-                <span className="text-xs font-black text-zinc-400 uppercase tracking-tight">TRUTH-V4.2</span>
-              </div>
-            </div>
           </div>
 
-          {/* Log Area */}
           <div className="flex-1 flex flex-col bg-black/60 border border-white/10 rounded-3xl overflow-hidden min-h-[350px]">
             <div className="px-8 py-5 border-b border-white/10 bg-white/[0.03] flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Terminal className="w-5 h-5 text-zinc-600" />
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-zinc-600">LIVE FEED LOG</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-zinc-600">COMMS TRAFFIC</span>
               </div>
               {isScouring && (
                 <div className="flex items-center gap-3">
@@ -301,8 +287,8 @@ const App: React.FC = () => {
                     <p className={cn(
                       "text-[13px] leading-relaxed",
                       entry.kind === 'user' && "text-cyan-50 font-black uppercase tracking-tight",
-                      entry.kind === 'agent' && "text-zinc-400 block",
-                      entry.kind === 'tool' && "text-yellow-400 font-black",
+                      entry.kind === 'agent' && "text-zinc-400 block font-sans",
+                      entry.kind === 'tool' && "text-yellow-400 font-black tracking-widest",
                       entry.kind === 'error' && "text-red-600 font-bold",
                       entry.kind === 'status' && "text-zinc-700 italic"
                     )}>
@@ -316,57 +302,50 @@ const App: React.FC = () => {
           </div>
         </aside>
 
-        {/* Main Content */}
+        {/* Content Area */}
         <section className="flex-1 flex flex-col min-w-0 bg-[#030303]">
           <div className="p-16 xl:p-24 flex-1 overflow-y-auto">
             <div className="max-w-5xl mx-auto space-y-20">
               
               <div className="space-y-8">
                 <h2 className="text-6xl xl:text-8xl font-black italic uppercase tracking-tighter leading-[0.8]">
-                  TARGET <span className="text-red-500 font-black">SCAN</span>
+                  TARGET <span className="text-red-500 font-black underline decoration-red-900/40">ANALYSIS</span>
                 </h2>
-                <div className="flex items-center gap-6">
-                   <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-red-600/30 w-1/3" />
-                   </div>
-                   <p className="text-xs text-zinc-600 font-bold uppercase tracking-[0.5em] whitespace-nowrap">
-                     ANALYZING MARKET DISTORTION
-                   </p>
-                </div>
+                <p className="text-xs text-zinc-600 font-bold uppercase tracking-[0.5em] whitespace-nowrap">
+                  DECRYPTING UNFILTERED SENTIMENT FROM THE DEPTHS
+                </p>
               </div>
 
-              {/* Input Area */}
+              {/* Input */}
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-red-600/20 to-transparent blur-3xl opacity-0 group-hover:opacity-100 transition duration-1000" />
-                <div className="relative flex flex-col md:flex-row gap-6 p-6 bg-white/[0.04] border border-white/10 rounded-[2.5rem] backdrop-blur-3xl transition-all duration-500 focus-within:border-red-500/40 focus-within:bg-white/[0.06]">
+                <div className="absolute -inset-1 bg-red-600/10 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition duration-1000" />
+                <div className="relative flex flex-col md:flex-row gap-6 p-6 bg-white/[0.04] border border-white/10 rounded-[2.5rem] backdrop-blur-3xl focus-within:border-red-500/40 transition-all duration-500">
                   <input
                     value={manualQuery}
                     onChange={(e) => setManualQuery(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') void sendManualMessage(); }}
-                    placeholder="ENTER SUBJECT FOR DEEP SCRAPE..."
-                    className="flex-1 h-20 bg-transparent px-8 font-black text-lg uppercase tracking-[0.3em] focus:outline-none placeholder:text-zinc-900 overflow-hidden"
+                    placeholder="ENTER SUBJECT (PRODUCT / BRAND / TREND)..."
+                    className="flex-1 h-20 bg-transparent px-8 font-black text-lg uppercase tracking-[0.3em] focus:outline-none placeholder:text-zinc-800"
                   />
                   <button
                     onClick={() => void sendManualMessage()}
                     disabled={!isConnected}
                     className="h-20 px-12 bg-white hover:bg-red-600 hover:text-white text-black font-black uppercase tracking-[0.4em] text-xs rounded-[1.5rem] transition-all duration-500 shadow-2xl disabled:opacity-10 flex items-center justify-center gap-4"
                   >
-                    SCAN <ChevronRight className="w-6 h-6" />
+                    SCAN <Search className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              {/* Dossier Display */}
+              {/* Dossier Section */}
               <div className="space-y-12">
                 <div className="flex items-center justify-between border-b border-white/10 pb-10">
                   <div className="flex items-center gap-6">
                     <Database className="w-8 h-8 text-red-600" />
-                    <h3 className="text-3xl font-black uppercase tracking-[0.3em] italic text-white flex items-center gap-4">
-                      TRUTH <span className="opacity-30 text-red-500">DOSSIER</span>
-                    </h3>
+                    <h3 className="text-3xl font-black uppercase tracking-[0.3em] italic text-white">SYSTEM <span className="opacity-40 text-red-500">ARTIFACTS</span></h3>
                   </div>
                   <div className="hidden sm:flex items-center gap-3 text-[11px] font-black text-zinc-500 uppercase tracking-widest bg-white/[0.03] border border-white/5 px-5 py-2 rounded-xl">
-                    DB_REFS: REDDIT_CORE_SCAN
+                    SOURCE: LIVE WEB SCRAPE
                   </div>
                 </div>
 
@@ -374,51 +353,55 @@ const App: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {[1, 2, 3, 4].map(i => (
                       <div key={i} className="h-48 bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 space-y-6 animate-pulse">
-                        <div className="h-5 w-1/4 bg-white/5 rounded-lg" />
-                        <div className="h-4 w-5/6 bg-white/5 rounded-lg" />
-                        <div className="h-4 w-2/3 bg-white/5 rounded-lg" />
+                        <div className="h-4 w-1/4 bg-white/5 rounded-lg" />
+                        <div className="h-4 w-3/4 bg-white/5 rounded-lg" />
+                        <div className="h-4 w-1/2 bg-white/5 rounded-lg" />
                       </div>
                     ))}
                   </div>
-                ) : feed.filter(f => f.kind === 'agent').length > 0 ? (
+                ) : (agentFeed.length > 0 || toolFeed.length > 0) ? (
                   <div className="group relative">
                     <div className="absolute -inset-4 bg-red-600/5 blur-3xl rounded-[4rem] transition-opacity duration-1000" />
                     <div className="relative p-12 lg:p-16 bg-white/[0.03] border border-white/10 rounded-[3rem] space-y-10 group-hover:border-red-500/30 transition-all duration-700">
                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <span className="w-3 h-3 bg-red-600 rounded-full shadow-[0_0_15px_rgba(239,68,68,1)] animate-pulse" />
-                            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-red-500">DECRYPTED FINDINGS</span>
+                            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-red-500">
+                                {toolFeed.some(f => f.text.includes('ACTION')) ? "ACTIVE TOOL SCAN" : "ANALYSIS COMPLETE"}
+                            </span>
                           </div>
-                          <span className="text-[10px] font-mono text-zinc-700 uppercase font-black tracking-tighter">SIG: {Math.random().toString(16).slice(2, 12).toUpperCase()}</span>
+                          <span className="text-[10px] font-mono text-zinc-700 uppercase font-black tracking-tighter">REF_ID: {Math.random().toString(16).slice(2, 12).toUpperCase()}</span>
                        </div>
                        
-                       <p className="text-xl lg:text-3xl font-bold leading-[1.6] text-zinc-100 indent-12 first-letter:text-5xl first-letter:font-black first-letter:text-red-500 first-letter:float-left first-letter:mr-3 first-letter:mt-2">
-                          {feed.filter(f => f.kind === 'agent').slice(-1)[0].text}
-                       </p>
+                       <div className="space-y-8">
+                         {agentFeed.slice(-1).map((f) => (
+                           <p key={f.id} className="text-xl lg:text-3xl font-bold leading-[1.6] text-zinc-100 indent-12 block font-sans">
+                              {f.text}
+                           </p>
+                         ))}
+                       </div>
                        
                        <div className="pt-12 flex flex-col xl:flex-row items-center justify-between gap-10 border-t border-white/10">
                           <div className="flex flex-wrap justify-center gap-10">
-                             <div className="flex items-center gap-4 group/item">
-                                <Search className="w-6 h-6 text-zinc-700 group-hover/item:text-red-500 transition-colors" />
-                                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-600 group-hover/item:text-zinc-400 transition-colors">FIRECRAWL_OSINT</span>
+                             <div className="flex items-center gap-4">
+                                <Search className="w-6 h-6 text-zinc-700 hover:text-white transition-colors" />
+                                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">FIRECRAWL_OSINT</span>
                              </div>
-                             <div className="flex items-center gap-4 group/item">
-                                <Flame className="w-6 h-6 text-zinc-700 group-hover/item:text-red-500 transition-colors" />
-                                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-600 group-hover/item:text-zinc-400 transition-colors">GPT_NUCLEUS_4</span>
+                             <div className="flex items-center gap-4">
+                                <Flame className="w-6 h-6 text-zinc-700 hover:text-white transition-colors" />
+                                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">GPT_NUCLEUS</span>
                              </div>
                           </div>
                           <button className="group flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.5em] text-red-500 hover:text-white transition-all duration-500">
-                            DOWNLOAD_DOSSIER <ExternalLink className="w-5 h-5 transition-transform duration-500 group-hover:translate-x-2 group-hover:-translate-y-2" />
+                            DOWNLOAD_INTEL <ExternalLink className="w-5 h-5 transition-transform duration-500 group-hover:translate-x-2 group-hover:-translate-y-2" />
                           </button>
                        </div>
                     </div>
                   </div>
                 ) : (
                   <div className="py-40 flex flex-col items-center justify-center bg-white/[0.01] border-4 border-dashed border-white/[0.03] rounded-[4rem] group transition-all duration-700 hover:bg-white/[0.02]">
-                    <div className="w-24 h-24 bg-zinc-900/50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-700 border border-white/5">
-                      <Activity className="w-10 h-10 text-zinc-800" />
-                    </div>
-                    <p className="text-xs font-black uppercase tracking-[0.6em] text-zinc-700 group-hover:text-zinc-500 transition-colors">AWAITING TARGET DATA</p>
+                    <Activity className="w-16 h-16 mb-8 text-zinc-800 animate-pulse" />
+                    <p className="text-xs font-black uppercase tracking-[0.6em] text-zinc-700 group-hover:text-zinc-500 transition-colors">AWAITING SUBJECT DATA...</p>
                   </div>
                 )}
               </div>
@@ -427,14 +410,14 @@ const App: React.FC = () => {
 
           <footer className="px-16 py-10 border-t border-white/10 bg-black/60 backdrop-blur-2xl flex flex-col lg:flex-row items-center justify-between gap-8 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">
              <div className="flex items-center gap-6">
-                <span className="text-red-600 shadow-[0_0_10px_rgba(220,38,38,0.2)]">TRUTH_SERUM_PROTOCOL v4.2</span>
+                <span className="text-red-600">TRUTH_SERUM_PROTOCOL v4.2</span>
                 <span className="opacity-20 font-light">|</span>
-                <span className="flex items-center gap-2 italic">SECURE_LINK // <span className="text-zinc-400 not-italic">LOCALHOST:3000</span></span>
+                <span className="text-zinc-700 italic">SECURE_LINK // OSINT_ENCRYPTED</span>
              </div>
              <div className="flex gap-12">
-                <a href="#" className="hover:text-red-500 transition-all">SYSTEM_WIKI</a>
+                <a href="#" className="hover:text-red-500 transition-all">PROJECT_WIKI</a>
                 <a href="#" className="hover:text-red-500 transition-all">DECRYPT_KEYS</a>
-                <a href="#" className="hover:text-red-500 transition-all">PROTOCOL_V3</a>
+                <a href="#" className="hover:text-red-500 transition-all">ELEVEN_HACKS</a>
              </div>
           </footer>
         </section>

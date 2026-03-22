@@ -227,11 +227,12 @@ app.post('/api/search', async (req, res) => {
   console.log(`[Truth Serum] Firecrawl Query: ${query}`);
 
   try {
-    // Optimized search: limit to 3 results and use a shorter timeout if possible.
+    // Increased depth: Asking for 10 threads. 
+    // WARNING: Scraping 10 pages may approach ElevenLabs tool timeout (20s-30s).
     const searchResponse = await firecrawl.search(
       query,
       {
-        limit: 3,
+        limit: 10,
         scrapeOptions: {
           formats: ['markdown'],
           onlyMainContent: true
@@ -275,7 +276,7 @@ app.post('/api/search', async (req, res) => {
 
     const topFindings = threads
       .flatMap((thread) => thread.findings)
-      .slice(0, 8);
+      .slice(0, 10);
 
     const findingsSection =
       topFindings.length > 0
