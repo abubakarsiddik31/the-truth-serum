@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { cn } from '../lib/utils';
 
 type TruthMeterProps = {
-  value: number; // 0-100, 0 = sketchy, 100 = legit
+  value: number; // truth_score: 0-100, 0 = pure BS, 100 = fully legit
   searching: boolean;
   verdict?: 'legit' | 'sketchy' | 'mixed' | 'unknown';
 };
@@ -12,13 +12,13 @@ export function TruthMeter({ value, searching, verdict }: TruthMeterProps) {
 
   useEffect(() => {
     if (searching) {
-      // Wobble randomly during search
       const interval = setInterval(() => {
         setDisplayValue(30 + Math.random() * 40);
       }, 400);
       return () => clearInterval(interval);
     }
-    setDisplayValue(value);
+    // Use truth_score directly — LLM provides it with proper rubric
+    setDisplayValue(Math.max(0, Math.min(100, value)));
   }, [value, searching]);
 
   // Needle rotation: -90deg (left/sketchy) to +90deg (right/legit)

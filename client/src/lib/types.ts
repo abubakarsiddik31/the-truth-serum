@@ -13,6 +13,7 @@ export type SearchTier = 'reddit' | 'reviews' | 'web';
 export interface Verdict {
   verdict: 'legit' | 'sketchy' | 'mixed' | 'unknown';
   confidence: number;
+  truth_score: number; // 0-100: 0 = pure BS, 100 = fully legit
   summary: string;
   tldr: string;
   pros: string[];
@@ -42,6 +43,7 @@ export interface VerdictResult {
   source_count: number;
   verdict: Verdict['verdict'];
   confidence: number;
+  truth_score: number;
   summary: string;
   tldr: string;
   pros: string[];

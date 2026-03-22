@@ -3,6 +3,7 @@ import { Crown, Share2, RotateCcw, ThumbsUp, ThumbsDown, Quote, ExternalLink, X 
 import { cn } from '../lib/utils';
 import { TruthMeter } from './TruthMeter';
 import { HypeTimeline } from './HypeTimeline';
+import { SourcesPanel } from './SourcesPanel';
 import type { ShowdownResult, Verdict } from '../lib/types';
 
 type ShowdownCardProps = {
@@ -54,7 +55,7 @@ function VerdictModal({ name, verdict, onClose }: { name: string; verdict: Verdi
 
           {/* Verdict header */}
           <div className={cn('p-5 rounded-2xl border space-y-4', style.bg, style.border)}>
-            <TruthMeter value={verdict.confidence} searching={false} verdict={verdict.verdict} />
+            <TruthMeter value={verdict.truth_score ?? verdict.confidence} searching={false} verdict={verdict.verdict} />
 
             <div className="text-center">
               <span className={cn('text-2xl font-black uppercase tracking-wider', style.text)}>
@@ -151,7 +152,7 @@ function MiniVerdict({ name, verdict, isWinner, onClick }: { name: string; verdi
       <p className="text-xs font-black text-center text-zinc-900 dark:text-white truncate">{name}</p>
 
       <div className="flex justify-center scale-75 -my-2">
-        <TruthMeter value={verdict.confidence} searching={false} verdict={verdict.verdict} />
+        <TruthMeter value={verdict.truth_score ?? verdict.confidence} searching={false} verdict={verdict.verdict} />
       </div>
 
       <p className={cn('text-center text-[11px] font-black uppercase', verdictColor[verdict.verdict])}>
@@ -250,6 +251,10 @@ export function ShowdownCard({ result, onNewSearch }: ShowdownCardProps) {
 
         {/* Actions */}
         <div className="flex gap-3">
+          <SourcesPanel
+            quotes={[...(result.left?.quotes ?? []), ...(result.right?.quotes ?? [])]}
+            sourceCount={result.source_count}
+          />
           <button
             onClick={handleShare}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors active:scale-95"

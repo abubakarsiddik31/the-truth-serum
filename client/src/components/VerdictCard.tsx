@@ -2,6 +2,7 @@ import { ThumbsUp, ThumbsDown, Quote, Share2, RotateCcw, ExternalLink, Globe, Me
 import { cn } from '../lib/utils';
 import { TruthMeter } from './TruthMeter';
 import { HypeTimeline } from './HypeTimeline';
+import { SourcesPanel } from './SourcesPanel';
 import type { VerdictResult, SearchTier } from '../lib/types';
 
 const tierInfo: Record<SearchTier, { icon: typeof Globe; label: string; color: string }> = {
@@ -43,7 +44,7 @@ export function VerdictCard({ result, onNewSearch }: VerdictCardProps) {
     <div className="mx-4 mb-4 space-y-5 animate-[fadeSlideUp_0.6s_ease-out]">
       {/* Verdict header */}
       <div className={cn('p-5 rounded-2xl border space-y-4', style.bg, style.border)}>
-        <TruthMeter value={result.confidence} searching={false} verdict={result.verdict} />
+        <TruthMeter value={result.truth_score ?? result.confidence} searching={false} verdict={result.verdict} />
 
         <div className="text-center">
           <span className={cn('text-2xl font-black uppercase tracking-wider', style.text)}>
@@ -131,6 +132,7 @@ export function VerdictCard({ result, onNewSearch }: VerdictCardProps) {
 
       {/* Actions */}
       <div className="flex gap-3">
+        <SourcesPanel quotes={result.quotes} sourceCount={result.source_count} />
         <button
           onClick={handleShare}
           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors active:scale-95"

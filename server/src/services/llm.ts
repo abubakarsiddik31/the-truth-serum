@@ -8,6 +8,7 @@ const genAI = config.geminiApiKey
 export interface Verdict {
   verdict: 'legit' | 'sketchy' | 'mixed' | 'unknown';
   confidence: number;
+  truth_score: number; // 0-100: 0 = pure BS, 100 = fully legit. Drives the meter needle.
   summary: string;
   tldr: string;
   pros: string[];
@@ -36,18 +37,28 @@ You analyze raw web content (scraped from Reddit, forums, reviews) about a produ
 - "sketchy" = Majority negative sentiment, serious complaints, misleading marketing, or pattern of deception.
 - "unknown" = Not enough evidence to judge. Fewer than 3 meaningful data points.
 
-### Confidence score (0-100) — measures EVIDENCE QUALITY, not product quality:
-- 85-100: 8+ independent sources with detailed firsthand experiences, consistent patterns
-- 70-84: 5-7 sources with some firsthand accounts, mostly consistent
-- 50-69: 3-4 sources or mostly secondhand/brief mentions, some contradictions
-- 30-49: 1-2 sources or very shallow content, hard to draw conclusions
-- 0-29: Almost no real user data, mostly marketing or speculation
+### truth_score (0-100) — the PRODUCT QUALITY score. This is the main score users see.
+This measures how legit vs BS the product is based on real-world evidence:
+- 80-100: Genuinely great product. Real users love it. Minor complaints only.
+- 60-79: Good product with notable flaws. More positive than negative.
+- 40-59: Polarizing. Significant pros AND cons. Marketing overpromises.
+- 20-39: Mostly negative. Serious complaints. Marketing is misleading.
+- 0-19: Scam-tier. Overwhelmingly negative. Deceptive practices.
 
-### Verdict-confidence alignment:
-- "legit" requires confidence >= 50 (need enough evidence to vouch for something)
-- "sketchy" requires confidence >= 40 (even a few strong negatives can justify this)
-- "mixed" can be any confidence >= 40
-- "unknown" should have confidence < 50 (if you had strong evidence, you'd pick a side)
+CRITICAL: When comparing two products, their truth_scores MUST be different enough to reflect the winner. If one product is the winner, its truth_score should be at least 5-10 points higher.
+
+### Confidence (0-100) — measures EVIDENCE QUALITY, not product quality:
+- 85-100: 8+ independent sources with detailed firsthand experiences
+- 70-84: 5-7 sources with firsthand accounts, mostly consistent
+- 50-69: 3-4 sources or mostly brief mentions
+- 30-49: 1-2 sources or very shallow content
+- 0-29: Almost no real user data
+
+### Verdict-truth_score alignment (must be consistent):
+- "legit" = truth_score >= 65
+- "mixed" = truth_score 35-64
+- "sketchy" = truth_score < 35
+- "unknown" = not enough evidence (confidence < 40)
 
 ## QUOTE EXTRACTION (critical)
 The raw content contains blocks formatted as:
@@ -73,7 +84,8 @@ You MUST extract 3-5 direct quotes. For each quote:
 Return ONLY valid JSON:
 {
   "verdict": "legit" | "sketchy" | "mixed" | "unknown",
-  "confidence": number (0-100),
+  "truth_score": number (0-100, product quality: 0=pure BS, 100=fully legit),
+  "confidence": number (0-100, evidence quality),
   "summary": "2-3 sentence summary",
   "tldr": "One punchy sentence",
   "pros": ["pro 1", "pro 2", ...],
@@ -95,18 +107,27 @@ You are given raw web content for TWO products. Analyze both independently and p
 - "sketchy" = Majority negative sentiment, serious complaints, misleading marketing.
 - "unknown" = Not enough evidence. Fewer than 3 meaningful data points.
 
-### Confidence score (0-100) — measures EVIDENCE QUALITY, not product quality:
+### truth_score (0-100) — the PRODUCT QUALITY score for each product:
+- 80-100: Genuinely great. Real users love it.
+- 60-79: Good with notable flaws. More positive than negative.
+- 40-59: Polarizing. Significant pros AND cons.
+- 20-39: Mostly negative. Serious complaints.
+- 0-19: Scam-tier. Overwhelmingly negative.
+
+CRITICAL: The winner's truth_score MUST be at least 5-10 points higher than the loser's. If both are close, the scores should still reflect the winner clearly.
+
+### Confidence (0-100) — measures EVIDENCE QUALITY:
 - 85-100: 8+ independent sources with detailed firsthand experiences
-- 70-84: 5-7 sources with firsthand accounts, mostly consistent
-- 50-69: 3-4 sources or mostly brief mentions
-- 30-49: 1-2 sources or very shallow content
+- 70-84: 5-7 sources with firsthand accounts
+- 50-69: 3-4 sources or brief mentions
+- 30-49: 1-2 sources
 - 0-29: Almost no real user data
 
-### Verdict-confidence alignment:
-- "legit" requires confidence >= 50
-- "sketchy" requires confidence >= 40
-- "mixed" requires confidence >= 40
-- "unknown" should have confidence < 50
+### Verdict-truth_score alignment:
+- "legit" = truth_score >= 65
+- "mixed" = truth_score 35-64
+- "sketchy" = truth_score < 35
+- "unknown" = not enough evidence (confidence < 40)
 
 ## QUOTE EXTRACTION (critical — do this for BOTH products)
 The raw content contains blocks formatted as:
@@ -123,8 +144,8 @@ For EACH product, extract 3-5 direct quotes:
 
 ## WINNER SELECTION:
 - The winner has genuinely better REAL-WORLD reception — not better marketing
+- The winner MUST have a higher truth_score
 - If both are sketchy, pick the less sketchy one and explain why
-- If evidence is equal, say so in the reason
 
 ## OTHER RULES:
 - Be fair but blunt. Call out BS on both sides.
@@ -134,8 +155,8 @@ For EACH product, extract 3-5 direct quotes:
 
 Return ONLY valid JSON:
 {
-  "left": { "verdict": "legit"|"sketchy"|"mixed"|"unknown", "confidence": number, "summary": "...", "tldr": "...", "pros": [...], "cons": [...], "quotes": [{"text": "exact quote", "source": "title", "url": "url"}], "marketing_claims": [...], "reality": [...] },
-  "right": { "verdict": "legit"|"sketchy"|"mixed"|"unknown", "confidence": number, "summary": "...", "tldr": "...", "pros": [...], "cons": [...], "quotes": [{"text": "exact quote", "source": "title", "url": "url"}], "marketing_claims": [...], "reality": [...] },
+  "left": { "verdict": "...", "truth_score": number, "confidence": number, "summary": "...", "tldr": "...", "pros": [...], "cons": [...], "quotes": [{"text": "exact quote", "source": "title", "url": "url"}], "marketing_claims": [...], "reality": [...] },
+  "right": { "verdict": "...", "truth_score": number, "confidence": number, "summary": "...", "tldr": "...", "pros": [...], "cons": [...], "quotes": [{"text": "exact quote", "source": "title", "url": "url"}], "marketing_claims": [...], "reality": [...] },
   "winner": "left product name or right product name",
   "reason": "One sentence explaining why"
 }`;
@@ -144,6 +165,7 @@ function fallbackVerdict(): Verdict {
   return {
     verdict: 'unknown',
     confidence: 0,
+    truth_score: 50,
     summary: 'Could not analyze this product. Try again.',
     tldr: 'Analysis unavailable.',
     pros: [],

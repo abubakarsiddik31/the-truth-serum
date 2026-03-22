@@ -119,7 +119,8 @@ export default function App() {
       setIsScouring(true);
 
       // Extract the topic from the tool payload and fire parallel verdict
-      const params = asRecord(rec.parameters) || asRecord(rec.params) || asRecord(rec.body);
+      const params =
+        asRecord(rec.parameters) || asRecord(rec.params) || asRecord(rec.body);
       const topic =
         asText(params.topic) ||
         asText(params.query) ||
@@ -227,6 +228,7 @@ export default function App() {
         source_count: 0,
         verdict: "unknown",
         confidence: 0,
+        truth_score: 0,
         summary: "Something went wrong. Please try again.",
         tldr: "Analysis failed.",
         pros: [],
@@ -353,7 +355,11 @@ export default function App() {
               </button>
             )}
 
-            <TextInput mode="text" disabled={isSearching} onSend={sendTextQuery} />
+            <TextInput
+              mode="text"
+              disabled={isSearching}
+              onSend={sendTextQuery}
+            />
           </>
         )}
       </main>
