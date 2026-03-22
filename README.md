@@ -14,11 +14,13 @@ The backend uses Firecrawl to gather evidence and Gemini to produce a structured
 
 ---
 
-## Demo Video
+## Demo Videos
 
-[![Watch the demo video](https://img.youtube.com/vi/WZhcX9UncGM/maxresdefault.jpg)](https://www.youtube.com/watch?v=WZhcX9UncGM)
+### Full Demo
+[![Watch the demo video](https://img.youtube.com/vi/RaXvYMiT_7E/maxresdefault.jpg)](https://www.youtube.com/watch?v=RaXvYMiT_7E)
 
-[Watch Demo Video on YouTube](https://www.youtube.com/watch?v=WZhcX9UncGM)
+[Watch Demo Video on YouTube](https://www.youtube.com/watch?v=RaXvYMiT_7E)
+
 
 ### Architecture Diagram
 
@@ -222,7 +224,7 @@ The default local development path for this repository is `npm run dev`.
 ![Screenshot 5](./resources/app-screenshot-05.png)
 ![Screenshot 6](./resources/app-screenshot-06.png)
 ![Screenshot 7](./resources/app-screenshot-07.png)
-
+![Screenshot 7](./resources/comparison.png)
 ---
 
 ## License
