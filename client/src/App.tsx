@@ -36,8 +36,8 @@ export default function App() {
   const [isSearching, setIsSearching] = useState(false);
   const [chatResult, setChatResult] = useState<ChatResult | null>(null);
 
-  // Voice mode: parallel verdict card
-  const [voiceVerdict, setVoiceVerdict] = useState<VerdictResult | null>(null);
+  // Voice mode: parallel verdict/showdown card
+  const [voiceResult, setVoiceResult] = useState<ChatResult | null>(null);
   const [voiceSearching, setVoiceSearching] = useState(false);
   const lastVoiceQuery = useRef("");
 
@@ -56,19 +56,22 @@ export default function App() {
     if (!topic || topic === lastVoiceQuery.current) return;
     lastVoiceQuery.current = topic;
     setVoiceSearching(true);
-    setVoiceVerdict(null);
+    setVoiceResult(null);
+
+    // Detect "X vs Y" pattern for showdown mode
+    const vsMatch = topic.match(/^(.+?)\s+(?:vs\.?|versus|or)\s+(.+)$/i);
+    const query = vsMatch ? vsMatch[1].trim() : topic;
+    const compare = vsMatch ? vsMatch[2].trim() : undefined;
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: topic }),
+        body: JSON.stringify({ query, compare }),
       });
       if (!res.ok) return;
       const data = await res.json();
-      if (data.type === "verdict") {
-        setVoiceVerdict(data as VerdictResult);
-      }
+      setVoiceResult(data as ChatResult);
     } catch {
       // Silent fail — voice agent still works
     } finally {
@@ -88,7 +91,7 @@ export default function App() {
       };
       pushFeed("status", labels[status] || `Status: ${status}`);
       if (status === "disconnected") {
-        setVoiceVerdict(null);
+        setVoiceResult(null);
         setVoiceSearching(false);
         lastVoiceQuery.current = "";
       }
@@ -286,12 +289,17 @@ export default function App() {
                 </div>
               )}
 
-              {voiceVerdict && (
-                <VerdictCard
-                  result={voiceVerdict}
-                  onNewSearch={() => setVoiceVerdict(null)}
+              {voiceResult?.type === "showdown" ? (
+                <ShowdownCard
+                  result={voiceResult as ShowdownResult}
+                  onNewSearch={() => setVoiceResult(null)}
                 />
-              )}
+              ) : voiceResult?.type === "verdict" ? (
+                <VerdictCard
+                  result={voiceResult as VerdictResult}
+                  onNewSearch={() => setVoiceResult(null)}
+                />
+              ) : null}
 
               <ConversationFeed feed={feed} isScouring={isScouring} />
             </div>
